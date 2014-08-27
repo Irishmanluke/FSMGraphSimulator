@@ -1,0 +1,63 @@
+#!/usr/bin/python -B
+
+import sys
+from FSM import FSM
+
+USAGE = "USAGE: {0} -graph|-sim [input_file]\n"
+
+def main():
+    argc = len(sys.argv)
+    if( not (argc==2 or argc==3)  ):
+        sys.stderr.write(USAGE.format(sys.argv[0])) 
+        sys.exit(1)
+
+    if sys.argv[1] == "-graph":
+        graph_mode = True
+    elif sys.argv[1] == "-sim":
+        graph_mode = False
+    else:
+        sys.stderr.write(USAGE.format(sys.argv[0])) 
+        sys.exit(1)
+
+    interactive_mode = (argc == 2)  
+    if(interactive_mode):
+        input_file = sys.stdin
+    else:
+        input_filename = sys.argv[2]
+        try:
+            input_file = open(input_filename,'r')
+        except IOError:
+            print("Could not open "+input_filename+" exiting")
+            sys.exit(1)
+
+    try:
+        fsm = FSM(input_file)
+    except:
+        sys.exit(1) 
+
+    if(graph_mode):
+
+        if(interactive_mode):
+            output_filename = "out.dot"
+        else:
+            input_file.close()
+            output_filename = (input_filename.split("/"))[-1].split(".")[0] +".dot"
+
+        try:
+            output_file = open(output_filename,'w')
+        except IOError:
+            print("Count not open "+output_filename+" exiting")
+            sys.exit(1)
+
+        fsm.exportToGraph(output_file)
+        output_file.close()
+    else:
+        for line in input_file:
+            line = line.strip()     
+            print(line+ (" is accepted" if fsm.simulate(line) else " is NOT accepted"))
+
+        if not interactive_mode:
+            input_file.close()
+
+if __name__ == "__main__":
+    main()
